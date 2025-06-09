@@ -8,18 +8,15 @@
 #include "brick.h"
 #include "affichageConsole.h"
 
-#define WIDTH 40
-#define HEIGHT 20
-#define PADDLE_WIDTH 7
+#define WIDTH 80
+#define HEIGHT 30
+#define PADDLE_WIDTH 9
 #define BRICK_ROWS 3
 #define BRICK_COLS 10
-#define BRICK_WIDTH 4
+#define BRICK_WIDTH 8
 
 //Couleur de l'affichage:
 #define COLOR_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
-#define COLOR_RED_BRIGHT (FOREGROUND_RED | FOREGROUND_INTENSITY)
-#define COLOR_BLUE_BRIGHT (FOREGROUND_BLUE | FOREGROUND_INTENSITY)
-#define COLOR_CYAN (FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
 
 
 void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount) {
@@ -49,6 +46,7 @@ void waitNextFrame(DWORD startTick, int targetMs) {
     }
 }
 
+
 int main() {
     Paddle paddle;
     Ball ball;
@@ -58,7 +56,7 @@ int main() {
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
     Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 1, -1);
-    ball.speed = 4;  // ← vitesse contrôlée ici (1 = rapide, 3 = lent)
+    ball.speed = 2;  //  vitesse de la ballse (1 = rapide, 3 = lent)
 
     int brickCount = 0;
     for (int row = 0; row < BRICK_ROWS; ++row) {
@@ -85,7 +83,7 @@ int main() {
             }
         }
 
-        // Déplacement de la balle selon sa vitesse
+        // Déplacement de la balle
         ball.tick++;
         if (ball.tick >= ball.speed) {
             ball.tick = 0;
@@ -130,9 +128,15 @@ int main() {
         }
         if (win) {
             draw(&aff, &paddle, &ball, bricks, brickCount);
-            Sleep(100);
-            MessageBoxA(NULL, "You Win!", "Victoire", MB_OK);
-            break;
+            //MessageBoxA(NULL, "You Win!", "Victoire", MB_OK);
+            
+            //boucle pour replacer toutes les bricks au lieu d'arrêter le jeu
+            brickCount = 0;
+            for (int row = 0; row < BRICK_ROWS; ++row) {
+                for (int col = 0; col < BRICK_COLS; ++col) {
+                    Brick_init(&bricks[brickCount++], col * BRICK_WIDTH, row + 2);
+                }
+            }
         }
 
         waitNextFrame(start, 16); // environ 60 FPS
