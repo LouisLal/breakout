@@ -4,6 +4,8 @@
 typedef struct {
     int x, y;
     int dx, dy;
+    int speed;
+    int tick;
 } Ball;
 
 void Ball_init(Ball* b, int x, int y, int dx, int dy);

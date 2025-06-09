@@ -1,11 +1,14 @@
 #include "ball.h"
 
-void Ball_init(Ball* b, int x, int y, int dx, int dy) {
-    b->x = x;
-    b->y = y;
-    b->dx = dx;
-    b->dy = dy;
+void Ball_init(Ball* ball, int x, int y, int dx, int dy) {
+    ball->x = x;
+    ball->y = y;
+    ball->dx = dx;
+    ball->dy = dy;
+    ball->speed = 2;
+    ball->tick = 0;
 }
+
 
 void Ball_move(Ball* b) {
     b->x += b->dx;

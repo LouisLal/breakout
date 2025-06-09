@@ -6,6 +6,7 @@
 #include "paddle.h"
 #include "ball.h"
 #include "brick.h"
+#include "affichageConsole.h"
 
 #define WIDTH 40
 #define HEIGHT 20
@@ -14,50 +15,31 @@
 #define BRICK_COLS 10
 #define BRICK_WIDTH 4
 
-void clearScreen() {
-    COORD topLeft = { 0, 0 };
-    DWORD written;
-    CONSOLE_SCREEN_BUFFER_INFO screen;
-    DWORD cells;
-    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+//Couleur de l'affichage:
+#define COLOR_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+#define COLOR_RED_BRIGHT (FOREGROUND_RED | FOREGROUND_INTENSITY)
+#define COLOR_BLUE_BRIGHT (FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+#define COLOR_CYAN (FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
 
-    GetConsoleScreenBufferInfo(console, &screen);
-    cells = screen.dwSize.X * screen.dwSize.Y;
-    FillConsoleOutputCharacter(console, ' ', cells, topLeft, &written);
-    FillConsoleOutputAttribute(console, screen.wAttributes, cells, topLeft, &written);
-    SetConsoleCursorPosition(console, topLeft);
-}
 
-void draw(const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount) {
-    clearScreen();
-    for (int y = 0; y < HEIGHT; ++y) {
-        for (int x = 0; x < WIDTH; ++x) {
-            int drawn = 0;
-            // Draw bricks
-            for (int i = 0; i < brickCount; ++i) {
-                if (bricks[i].alive &&
-                    x >= bricks[i].x &&
-                    x < bricks[i].x + BRICK_WIDTH &&
-                    y == bricks[i].y) {
-                    printf("#");
-                    drawn = 1;
-                    break;
-                }
-            }
-            if (drawn) continue;
-            // Draw ball
-            if (x == ball->x && y == ball->y) {
-                printf("O");
-            } else if (y == paddle->y &&
-                       x >= paddle->x &&
-                       x < paddle->x + paddle->width) {
-                printf("=");
-            } else {
-                printf(" ");
-            }
+void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount) {
+    clearAffichage(aff);
+
+    for (int i = 0; i < brickCount; ++i) {
+        if (bricks[i].alive) {
+        for (int x = 0; x < BRICK_WIDTH; ++x) {
+            putCharAffichage(aff, bricks[i].x + x, bricks[i].y, '#', bricks[i].color);
         }
-        printf("\n");
     }
+    }
+
+    putCharAffichage(aff, ball->x, ball->y, 'O', COLOR_WHITE);
+
+    for (int x = 0; x < paddle->width; ++x) {
+        putCharAffichage(aff, paddle->x + x, paddle->y, '=', COLOR_WHITE);
+    }
+
+    renderAffichage(aff);
 }
 
 void waitNextFrame(DWORD startTick, int targetMs) {
@@ -71,9 +53,12 @@ int main() {
     Paddle paddle;
     Ball ball;
     Brick bricks[BRICK_ROWS * BRICK_COLS];
+    AffichageConsole aff;
+    initAffichage(&aff);
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
     Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 1, -1);
+    ball.speed = 4;  // ← vitesse contrôlée ici (1 = rapide, 3 = lent)
 
     int brickCount = 0;
     for (int row = 0; row < BRICK_ROWS; ++row) {
@@ -84,56 +69,58 @@ int main() {
 
     int running = 1;
     while (running) {
-        draw(&paddle, &ball, bricks, brickCount);
+        DWORD start = GetTickCount();
 
-        // Input
+        draw(&aff, &paddle, &ball, bricks, brickCount);
+
+        // Contrôle utilisateur
         if (_kbhit()) {
             int ch = _getch();
-            if (ch == 224) { // touche spéciale
-                ch = _getch(); // code de la flèche
-                if (ch == 75) { // flèche gauche
-                    Paddle_moveLeft(&paddle, 0);
-                } else if (ch == 77) { // flèche droite
-                    Paddle_moveRight(&paddle, WIDTH);
-                }
+            if (ch == 224) {
+                ch = _getch();
+                if (ch == 75) Paddle_moveLeft(&paddle, 0);
+                else if (ch == 77) Paddle_moveRight(&paddle, WIDTH);
             } else if (ch == 'q') {
                 running = 0;
             }
         }
 
-        // Ball movement
-        Ball_move(&ball);
+        // Déplacement de la balle selon sa vitesse
+        ball.tick++;
+        if (ball.tick >= ball.speed) {
+            ball.tick = 0;
+            Ball_move(&ball);
 
-        // Wall collision
-        if (ball.x <= 0 || ball.x >= WIDTH - 1) Ball_bounceX(&ball);
-        if (ball.y <= 0) Ball_bounceY(&ball);
+            if (ball.x <= 0 || ball.x >= WIDTH - 1) Ball_bounceX(&ball);
+            if (ball.y <= 0) Ball_bounceY(&ball);
 
-        // Paddle collision
-        if (ball.y == paddle.y - 1 &&
-            ball.x >= paddle.x &&
-            ball.x < paddle.x + paddle.width) {
-            Ball_bounceY(&ball);
-        }
-
-        // Brick collision
-        for (int i = 0; i < brickCount; ++i) {
-            if (bricks[i].alive &&
-                ball.y == bricks[i].y &&
-                ball.x >= bricks[i].x &&
-                ball.x < bricks[i].x + BRICK_WIDTH) {
-                bricks[i].alive = 0;
+            if (ball.y == paddle.y - 1 &&
+                ball.x >= paddle.x &&
+                ball.x < paddle.x + paddle.width) {
                 Ball_bounceY(&ball);
-                break;
+            }
+
+            for (int i = 0; i < brickCount; ++i) {
+                if (bricks[i].alive &&
+                    ball.y == bricks[i].y &&
+                    ball.x >= bricks[i].x &&
+                    ball.x < bricks[i].x + BRICK_WIDTH) {
+                    bricks[i].alive = 0;
+                    Ball_bounceY(&ball);
+                    break;
+                }
             }
         }
 
-        // Lose condition
+        // Fin de partie : balle en bas
         if (ball.y >= HEIGHT - 1) {
-            printf("Game Over!\n");
+            draw(&aff, &paddle, &ball, bricks, brickCount);
+            Sleep(100);
+            MessageBoxA(NULL, "Game Over!", "Fin", MB_OK);
             break;
         }
 
-        // Win condition
+        // Victoire
         int win = 1;
         for (int i = 0; i < brickCount; ++i) {
             if (bricks[i].alive) {
@@ -142,12 +129,13 @@ int main() {
             }
         }
         if (win) {
-            printf("You Win!\n");
+            draw(&aff, &paddle, &ball, bricks, brickCount);
+            Sleep(100);
+            MessageBoxA(NULL, "You Win!", "Victoire", MB_OK);
             break;
         }
 
-        DWORD start = GetTickCount();
-        waitNextFrame(start, 16);
+        waitNextFrame(start, 16); // environ 60 FPS
     }
 
     system("pause");
