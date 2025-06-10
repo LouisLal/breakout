@@ -10,7 +10,7 @@
 
 #define WIDTH 80
 #define HEIGHT 30
-#define PADDLE_WIDTH 9
+#define PADDLE_WIDTH 15
 #define BRICK_ROWS 3
 #define BRICK_COLS 10
 #define BRICK_WIDTH 8
@@ -56,7 +56,7 @@ int main() {
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
     Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 1, -1);
-    ball.speed = 2;  //  vitesse de la ballse (1 = rapide, 3 = lent)
+    ball.speed = 1;  //  vitesse de la ballse (1 = rapide, 3 = lent)
 
     int brickCount = 0;
     for (int row = 0; row < BRICK_ROWS; ++row) {
@@ -92,11 +92,16 @@ int main() {
             if (ball.x <= 0 || ball.x >= WIDTH - 1) Ball_bounceX(&ball);
             if (ball.y <= 0) Ball_bounceY(&ball);
 
-            if (ball.y == paddle.y - 1 &&
-                ball.x >= paddle.x &&
-                ball.x < paddle.x + paddle.width) {
+            if ((int)(ball.y) == paddle.y - 1 &&
+                (int)(ball.x) >= paddle.x &&
+                (int)(ball.x) < paddle.x + paddle.width) {
+
                 Ball_bounceY(&ball);
+
+                float impact = ((ball.x - paddle.x) / paddle.width) - 0.5f; // -0.5 à 0.5
+                ball.dx = impact * 2.0f;  // Ajuste la force latérale
             }
+
 
             for (int i = 0; i < brickCount; ++i) {
                 if (bricks[i].alive &&
@@ -139,7 +144,7 @@ int main() {
             }
         }
 
-        waitNextFrame(start, 16); // environ 60 FPS
+        waitNextFrame(start, 33); // environ 60 FPS
     }
 
     system("pause");

@@ -11,8 +11,8 @@ void Ball_init(Ball* ball, int x, int y, int dx, int dy) {
 
 
 void Ball_move(Ball* b) {
-    b->x += b->dx;
-    b->y += b->dy;
+    b->x += b->dx * b->speed;
+    b->y += b->dy * b->speed;
 }
 
 void Ball_bounceX(Ball* b) {

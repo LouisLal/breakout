@@ -2,9 +2,9 @@
 #define BALL_H
 
 typedef struct {
-    int x, y;
-    int dx, dy;
-    int speed;
+    float x, y;
+    float dx, dy;
+    float speed;
     int tick;
 } Ball;
 
