@@ -14,6 +14,7 @@
 #define BRICK_ROWS 3
 #define BRICK_COLS 10
 #define BRICK_WIDTH 8
+#define BORDER_CHAR '*'
 
 //Couleur de l'affichage:
 #define COLOR_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
@@ -22,29 +23,43 @@
 void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount, int score) {
     clearAffichage(aff);
 
+    // Bordures
+    for (int x = 0; x < WIDTH; ++x) {
+        putCharAffichage(aff, x, 0, '-', COLOR_WHITE);                  // Haut
+        putCharAffichage(aff, x, HEIGHT - 1, '-', COLOR_WHITE);        // Bas
+    }
+    for (int y = 0; y < HEIGHT; ++y) {
+        putCharAffichage(aff, 0, y, '|', COLOR_WHITE);                 // Gauche
+        putCharAffichage(aff, WIDTH - 1, y, '|', COLOR_WHITE);         // Droite
+    }
+
+    // Affichage du score
+    char scoreStr[32];
+    sprintf(scoreStr, " Score: %d ", score);
+    for (int i = 0; scoreStr[i] != '\0'; ++i) {
+        putCharAffichage(aff, i + 2, 0, scoreStr[i], COLOR_WHITE);
+    }
+
+    // Briques
     for (int i = 0; i < brickCount; ++i) {
         if (bricks[i].alive) {
-        for (int x = 0; x < BRICK_WIDTH; ++x) {
-            putCharAffichage(aff, bricks[i].x + x, bricks[i].y, '#', bricks[i].color);
+            for (int x = 0; x < BRICK_WIDTH; ++x) {
+                putCharAffichage(aff, bricks[i].x + x, bricks[i].y, '#', bricks[i].color);
+            }
         }
     }
-    }
 
+    // Balle
     putCharAffichage(aff, ball->x, ball->y, 'O', COLOR_WHITE);
 
+    // Raquette
     for (int x = 0; x < paddle->width; ++x) {
         putCharAffichage(aff, paddle->x + x, paddle->y, '=', COLOR_WHITE);
     }
 
-    //Affichage du score
-    char scoreStr[32];
-    sprintf(scoreStr, "Score: %d", score);
-    for (int i = 0; scoreStr[i] != '\0'; ++i) {
-        putCharAffichage(aff, i, 0, scoreStr[i], COLOR_WHITE);
-    }
-
     renderAffichage(aff);
 }
+
 
 void waitNextFrame(DWORD startTick, int targetMs) {
     DWORD elapsed = GetTickCount() - startTick;
@@ -63,13 +78,13 @@ int main() {
     initAffichage(&aff);
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
-    Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 1, -1);
+    Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 0, -1);
     ball.speed = 1;  //  vitesse de la ballse (1 = rapide, 3 = lent)
 
     int brickCount = 0;
     for (int row = 0; row < BRICK_ROWS; ++row) {
         for (int col = 0; col < BRICK_COLS; ++col) {
-            Brick_init(&bricks[brickCount++], col * BRICK_WIDTH, row + 2);
+            Brick_init(&bricks[brickCount++], 1 + col * BRICK_WIDTH, 2 + row);
         }
     }
 
@@ -97,8 +112,9 @@ int main() {
             ball.tick = 0;
             Ball_move(&ball);
 
-            if (ball.x <= 0 || ball.x >= WIDTH - 1) Ball_bounceX(&ball);
-            if (ball.y <= 0) Ball_bounceY(&ball);
+            if (ball.x <= 1 || ball.x >= WIDTH - 2) Ball_bounceX(&ball);
+            if (ball.y <= 1) Ball_bounceY(&ball);
+
 
             if ((int)(ball.y) == paddle.y - 1 &&
                 (int)(ball.x) >= paddle.x &&
@@ -126,7 +142,8 @@ int main() {
         }
 
         // Fin de partie : balle en bas
-        if (ball.y >= HEIGHT - 1) {
+        if (ball.y >= HEIGHT - 2)
+        {
             draw(&aff, &paddle, &ball, bricks, brickCount, score);
             Sleep(100);
             MessageBoxA(NULL, "Game Over!", "Fin", MB_OK);
