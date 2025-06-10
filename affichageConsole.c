@@ -29,7 +29,6 @@ void putCharAffichage(AffichageConsole* aff, int x, int y, char c, WORD color) {
     }
 }
 
-
 void renderAffichage(AffichageConsole* aff) {
     WriteConsoleOutputA(
         aff->hConsole,

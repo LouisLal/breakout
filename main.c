@@ -19,7 +19,7 @@
 #define COLOR_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
 
 
-void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount) {
+void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const Brick bricks[], int brickCount, int score) {
     clearAffichage(aff);
 
     for (int i = 0; i < brickCount; ++i) {
@@ -34,6 +34,13 @@ void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const B
 
     for (int x = 0; x < paddle->width; ++x) {
         putCharAffichage(aff, paddle->x + x, paddle->y, '=', COLOR_WHITE);
+    }
+
+    //Affichage du score
+    char scoreStr[32];
+    sprintf(scoreStr, "Score: %d", score);
+    for (int i = 0; scoreStr[i] != '\0'; ++i) {
+        putCharAffichage(aff, i, 0, scoreStr[i], COLOR_WHITE);
     }
 
     renderAffichage(aff);
@@ -52,6 +59,7 @@ int main() {
     Ball ball;
     Brick bricks[BRICK_ROWS * BRICK_COLS];
     AffichageConsole aff;
+    int score = 0;
     initAffichage(&aff);
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
@@ -69,7 +77,7 @@ int main() {
     while (running) {
         DWORD start = GetTickCount();
 
-        draw(&aff, &paddle, &ball, bricks, brickCount);
+        draw(&aff, &paddle, &ball, bricks, brickCount, score);
 
         // Contrôle utilisateur
         if (_kbhit()) {
@@ -107,7 +115,9 @@ int main() {
                 if (bricks[i].alive &&
                     ball.y == bricks[i].y &&
                     ball.x >= bricks[i].x &&
-                    ball.x < bricks[i].x + BRICK_WIDTH) {
+                    ball.x < bricks[i].x + BRICK_WIDTH) 
+                {
+                    score += 100; 
                     bricks[i].alive = 0;
                     Ball_bounceY(&ball);
                     break;
@@ -117,7 +127,7 @@ int main() {
 
         // Fin de partie : balle en bas
         if (ball.y >= HEIGHT - 1) {
-            draw(&aff, &paddle, &ball, bricks, brickCount);
+            draw(&aff, &paddle, &ball, bricks, brickCount, score);
             Sleep(100);
             MessageBoxA(NULL, "Game Over!", "Fin", MB_OK);
             break;
@@ -132,7 +142,7 @@ int main() {
             }
         }
         if (win) {
-            draw(&aff, &paddle, &ball, bricks, brickCount);
+            draw(&aff, &paddle, &ball, bricks, brickCount, score);
             //MessageBoxA(NULL, "You Win!", "Victoire", MB_OK);
             
             //boucle pour replacer toutes les bricks au lieu d'arrêter le jeu
