@@ -1,7 +1,7 @@
 #pragma once
 #include <windows.h>
 
-#define NB_COLS 80
+#define NB_COLS 82
 #define NB_LIGNES 30
 
 typedef struct {

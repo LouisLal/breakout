@@ -8,9 +8,9 @@
 #include "brick.h"
 #include "affichageConsole.h"
 
-#define WIDTH 80
+#define WIDTH 81
 #define HEIGHT 30
-#define PADDLE_WIDTH 15
+#define PADDLE_WIDTH 13
 #define BRICK_ROWS 3
 #define BRICK_COLS 10
 #define BRICK_WIDTH 8
@@ -30,7 +30,8 @@ void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const B
     }
     for (int y = 0; y < HEIGHT; ++y) {
         putCharAffichage(aff, 0, y, '|', COLOR_WHITE);                 // Gauche
-        putCharAffichage(aff, WIDTH - 1, y, '|', COLOR_WHITE);         // Droite
+        putCharAffichage(aff, WIDTH - 1, y, '|', COLOR_WHITE);
+
     }
 
     // Affichage du score
@@ -79,7 +80,6 @@ int main() {
 
     Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
     Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 0, -1);
-    ball.speed = 1;  //  vitesse de la ballse (1 = rapide, 3 = lent)
 
     int brickCount = 0;
     for (int row = 0; row < BRICK_ROWS; ++row) {
@@ -95,13 +95,17 @@ int main() {
         draw(&aff, &paddle, &ball, bricks, brickCount, score);
 
         // Contrôle utilisateur
+        // Contrôle utilisateur avec GetAsyncKeyState (pas de délai auto-répétition)
+        if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+            Paddle_moveLeft(&paddle, 0);
+        }
+        if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
+            Paddle_moveRight(&paddle, WIDTH);
+        }
+        
         if (_kbhit()) {
             int ch = _getch();
-            if (ch == 224) {
-                ch = _getch();
-                if (ch == 75) Paddle_moveLeft(&paddle, 0);
-                else if (ch == 77) Paddle_moveRight(&paddle, WIDTH);
-            } else if (ch == 'q') {
+            if (ch == 'q') {
                 running = 0;
             }
         }
@@ -123,7 +127,7 @@ int main() {
                 Ball_bounceY(&ball);
 
                 float impact = ((ball.x - paddle.x) / paddle.width) - 0.5f; // -0.5 à 0.5
-                ball.dx = impact * 2.0f;  // Ajuste la force latérale
+                ball.dx = impact * 3.0f;  // Ajuste la force latérale
             }
 
 
@@ -146,8 +150,24 @@ int main() {
         {
             draw(&aff, &paddle, &ball, bricks, brickCount, score);
             Sleep(100);
-            MessageBoxA(NULL, "Game Over!", "Fin", MB_OK);
-            break;
+            char msgFin[64];
+            if(score < 1000){sprintf(msgFin, "T'es don bin trash man...\nScore: %d\nVeux-tu rejouer?", score);}
+            else if (score < 2000){sprintf(msgFin, "Get gud :|\nScore: %d\nVeux-tu rejouer?", score);}
+            else {sprintf(msgFin, "Get a life, c'est un jeu dans un terminal :|\nScore: %d\nVeux-tu rejouer?", score);}
+            int msgboxID = MessageBox(NULL, msgFin, "Fin de la partie!", MB_YESNO);
+            if (msgboxID == IDNO) {
+                break;
+            }
+            else if(msgboxID == IDYES){
+                Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 0, -1);
+                score = 0;
+                int brickCount = 0;
+                for (int row = 0; row < BRICK_ROWS; ++row) {
+                    for (int col = 0; col < BRICK_COLS; ++col) {
+                        Brick_init(&bricks[brickCount++], 1 + col * BRICK_WIDTH, 2 + row);
+                    }
+                }
+            }
         }
 
         // Victoire
@@ -163,17 +183,15 @@ int main() {
             //MessageBoxA(NULL, "You Win!", "Victoire", MB_OK);
             
             //boucle pour replacer toutes les bricks au lieu d'arrêter le jeu
-            brickCount = 0;
+            int brickCount = 0;
             for (int row = 0; row < BRICK_ROWS; ++row) {
                 for (int col = 0; col < BRICK_COLS; ++col) {
-                    Brick_init(&bricks[brickCount++], col * BRICK_WIDTH, row + 2);
+                    Brick_init(&bricks[brickCount++], 1 + col * BRICK_WIDTH, 2 + row);
                 }
             }
         }
 
         waitNextFrame(start, 33); // environ 60 FPS
     }
-
-    system("pause");
     return 0;
 }

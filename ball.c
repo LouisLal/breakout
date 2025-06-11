@@ -5,7 +5,7 @@ void Ball_init(Ball* ball, int x, int y, int dx, int dy) {
     ball->y = y;
     ball->dx = dx;
     ball->dy = dy;
-    ball->speed = 2;
+    ball->speed = 1;
     ball->tick = 0;
 }
 
