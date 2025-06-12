@@ -116,7 +116,7 @@ int main() {
             ball.tick = 0;
             Ball_move(&ball);
 
-            if (ball.x <= 2 || ball.x >= WIDTH - 3) Ball_bounceX(&ball);
+            if (ball.x <= 2 || ball.x >= WIDTH - 2) Ball_bounceX(&ball);
             if (ball.y <= 1) Ball_bounceY(&ball);
 
 
