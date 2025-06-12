@@ -7,7 +7,7 @@ void Paddle_init(Paddle* p, int x, int y, int width) {
 }
 
 void Paddle_moveLeft(Paddle* p, int minX) {
-    if (p->x > minX) {
+    if (p->x +1 > minX) {
         p->x -= 2;
     }
 }

@@ -8,7 +8,7 @@
 #include "brick.h"
 #include "affichageConsole.h"
 
-#define WIDTH 81
+#define WIDTH 82
 #define HEIGHT 30
 #define PADDLE_WIDTH 13
 #define BRICK_ROWS 3
@@ -30,7 +30,7 @@ void draw(AffichageConsole* aff, const Paddle* paddle, const Ball* ball, const B
     }
     for (int y = 0; y < HEIGHT; ++y) {
         putCharAffichage(aff, 0, y, '|', COLOR_WHITE);                 // Gauche
-        putCharAffichage(aff, WIDTH - 1, y, '|', COLOR_WHITE);
+        putCharAffichage(aff, WIDTH-1, y, '|', COLOR_WHITE);
 
     }
 
@@ -97,10 +97,10 @@ int main() {
         // Contrôle utilisateur
         // Contrôle utilisateur avec GetAsyncKeyState (pas de délai auto-répétition)
         if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
-            Paddle_moveLeft(&paddle, 0);
+            Paddle_moveLeft(&paddle, 1);
         }
         if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
-            Paddle_moveRight(&paddle, WIDTH);
+            Paddle_moveRight(&paddle, WIDTH-1);
         }
         
         if (_kbhit()) {
@@ -116,7 +116,7 @@ int main() {
             ball.tick = 0;
             Ball_move(&ball);
 
-            if (ball.x <= 1 || ball.x >= WIDTH - 2) Ball_bounceX(&ball);
+            if (ball.x <= 2 || ball.x >= WIDTH - 3) Ball_bounceX(&ball);
             if (ball.y <= 1) Ball_bounceY(&ball);
 
 
@@ -160,6 +160,7 @@ int main() {
             }
             else if(msgboxID == IDYES){
                 Ball_init(&ball, WIDTH / 2, HEIGHT / 2, 0, -1);
+                Paddle_init(&paddle, WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - 2, PADDLE_WIDTH);
                 score = 0;
                 int brickCount = 0;
                 for (int row = 0; row < BRICK_ROWS; ++row) {
