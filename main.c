@@ -151,9 +151,9 @@ int main() {
             draw(&aff, &paddle, &ball, bricks, brickCount, score);
             Sleep(100);
             char msgFin[64];
-            if(score < 1000){sprintf(msgFin, "T'es don bin trash man...\nScore: %d\nVeux-tu rejouer?", score);}
-            else if (score < 2000){sprintf(msgFin, "Get gud :|\nScore: %d\nVeux-tu rejouer?", score);}
-            else {sprintf(msgFin, "Get a life, c'est un jeu dans un terminal :|\nScore: %d\nVeux-tu rejouer?", score);}
+            if(score < 2000){sprintf(msgFin, "Damn... j'espère c'était une pratique\nScore: %d\nVeux-tu rejouer?", score);}
+            else if (score < 10000){sprintf(msgFin, "pas pire pas pire\nScore: %d\nVeux-tu rejouer?", score);}
+            else {sprintf(msgFin, "getalife.com pourrait être utile\nScore: %d\nVeux-tu rejouer?", score);}
             int msgboxID = MessageBox(NULL, msgFin, "Fin de la partie!", MB_YESNO);
             if (msgboxID == IDNO) {
                 break;
